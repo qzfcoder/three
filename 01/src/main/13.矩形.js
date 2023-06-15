@@ -24,43 +24,26 @@ camera.position.set(0, 0, 10);
 
 scene.add(camera);
 
-for (let i = 0; i < 50; i++) {
-  // 没一个三角形需要三个顶点，每个顶点需要三个坐标
-  const Geometry = new THREE.BufferGeometry();
-  const positionArray = new Float32Array(9);
-  for (let j = 0; j < 9; j++) {
-    positionArray[j] = Math.random() * 10 - 5;
-  }
-  let color = new THREE.Color(Math.random(), Math.random(), Math.random());
-  Geometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(positionArray, 3)
-  );
-  const material = new THREE.MeshBasicMaterial({ color: color });
-  const mesh = new THREE.Mesh(Geometry, material);
-  scene.add(mesh);
-}
-
 // 添加物体
 // 创建几何体对象
+const Geometry = new THREE.BufferGeometry();
 
-// const Geometry = new THREE.BufferGeometry();
-// const vertices = new Float32Array([
-//   -1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1,
-// ]);
+const vertices = new Float32Array([
+  -1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1,
+]);
 
-// Geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+Geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
 
 // 更具几何体额材质创建物体
 
-// // 材质
-// const Material = new THREE.MeshBasicMaterial({
-//   color: 0xffff,
-// });
-// // 根据集合体和材质创建物体
-// const mesh = new THREE.Mesh(Geometry, Material);
+// 材质
+const Material = new THREE.MeshBasicMaterial({
+  color: 0xffff,
+});
+// 根据集合体和材质创建物体
+const mesh = new THREE.Mesh(Geometry, Material);
 
-// scene.add(mesh);
+scene.add(mesh);
 // 渲染出啦
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
