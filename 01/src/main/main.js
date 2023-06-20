@@ -1,114 +1,110 @@
 import * as THREE from "three";
 // 导入轨道控制器
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-
 // 导入动画库
 import gsap from "gsap";
-// console.log(THREE);
-
-// 导入dat.gui库
+// 导入dat.gui
 import * as dat from "dat.gui";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader";
+// 目标：设置环境纹理
+// 加载hdr环境图
+const rgbeLoader = new RGBELoader();
+rgbeLoader.loadAsync("textures/hdr/002.hdr").then((texture) => {
+  texture.mapping = THREE.EquirectangularReflectionMapping;
+  scene.background = texture;
+  scene.environment = texture;
+});
 
-// 创建一个场景
+// 1、创建场景
 const scene = new THREE.Scene();
 
-// 创建相机  --- 透视相机
+// 2、创建相机
 const camera = new THREE.PerspectiveCamera(
   75,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
 );
-// x y z轴
-camera.position.set(0, 0, 10);
 
+// 设置相机位置
+camera.position.set(0, 0, 10);
 scene.add(camera);
 
-for (let i = 0; i < 50; i++) {
-  // 没一个三角形需要三个顶点，每个顶点需要三个坐标
-  const Geometry = new THREE.BufferGeometry();
-  const positionArray = new Float32Array(9);
-  for (let j = 0; j < 9; j++) {
-    positionArray[j] = Math.random() * 10 - 5;
-  }
-  let color = new THREE.Color(Math.random(), Math.random(), Math.random());
-  Geometry.setAttribute(
-    "position",
-    new THREE.BufferAttribute(positionArray, 3)
-  );
-  const material = new THREE.MeshBasicMaterial({ color: color });
-  const mesh = new THREE.Mesh(Geometry, material);
-  scene.add(mesh);
-}
+// 设置cube纹理加载器
+const cubeTextureLoader = new THREE.CubeTextureLoader();
+const envMapTexture = cubeTextureLoader.load([
+  "textures/environmentMaps/1/px.jpg",
+  "textures/environmentMaps/1/nx.jpg",
+  "textures/environmentMaps/1/py.jpg",
+  "textures/environmentMaps/1/ny.jpg",
+  "textures/environmentMaps/1/pz.jpg",
+  "textures/environmentMaps/1/nz.jpg",
+]);
 
-// 添加物体
-// 创建几何体对象
+const sphereGeometry = new THREE.SphereBufferGeometry(1, 20, 20);
+const material = new THREE.MeshStandardMaterial({
+  metalness: 0.7,
+  roughness: 0.1,
+  //   envMap: envMapTexture,
+});
+const sphere = new THREE.Mesh(sphereGeometry, material);
+scene.add(sphere);
 
-// const Geometry = new THREE.BufferGeometry();
-// const vertices = new Float32Array([
-//   -1, -1, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1,
-// ]);
+// 给场景添加背景
+scene.background = envMapTexture;
+// 给场景所有的物体添加默认的环境贴图
+scene.environment = envMapTexture;
 
-// Geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+// 灯光
+// 环境光
+const light = new THREE.AmbientLight(0xffffff, 0.5); // soft white light
+scene.add(light);
+//直线光源
+const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+directionalLight.position.set(10, 10, 10);
+scene.add(directionalLight);
 
-// 更具几何体额材质创建物体
-
-// // 材质
-// const Material = new THREE.MeshBasicMaterial({
-//   color: 0xffff,
-// });
-// // 根据集合体和材质创建物体
-// const mesh = new THREE.Mesh(Geometry, Material);
-
-// scene.add(mesh);
-// 渲染出啦
+// 初始化渲染器
 const renderer = new THREE.WebGLRenderer();
+// 设置渲染的尺寸大小
 renderer.setSize(window.innerWidth, window.innerHeight);
-// 将webGlrendr渲染到body上
+// console.log(renderer);
+// 将webgl渲染的canvas内容添加到body
 document.body.appendChild(renderer.domElement);
 
-// 通过相机使用渲染器，将场景渲染进来
+// // 使用渲染器，通过相机将场景渲染进来
 // renderer.render(scene, camera);
 
 // 创建轨道控制器
 const controls = new OrbitControls(camera, renderer.domElement);
-
-// 设置控制器阻尼，让控制器更加真实,必须在动画循环中update
+// 设置控制器阻尼，让控制器更有真实效果,必须在动画循环里调用.update()。
 controls.enableDamping = true;
-// camera.position.set()
 
 // 添加坐标轴辅助器
 const axesHelper = new THREE.AxesHelper(5);
 scene.add(axesHelper);
-
-// 控制全屏控制
-window.addEventListener("dblclick", () => {
-  const fullScreenElement = document.fullscreenElement;
-  if (!fullScreenElement) {
-    // 双击进入全屏/退出全屏
-    renderer.domElement.requestFullscreen();
-  } else {
-    console.log(document);
-    document.exitFullscreen();
-  }
-});
+// 设置时钟
+const clock = new THREE.Clock();
 
 function render() {
   controls.update();
   renderer.render(scene, camera);
-  // 渲染下一帧的时候
+  //   渲染下一帧的时候就会调用render函数
   requestAnimationFrame(render);
 }
 
 render();
 
-// 监听画面的变化，更新渲染画面
+// 监听画面变化，更新渲染画面
 window.addEventListener("resize", () => {
-  console.log("画面变化了");
+  //   console.log("画面变化了");
   // 更新摄像头
   camera.aspect = window.innerWidth / window.innerHeight;
-  // 更新摄像机的投影居正
+  //   更新摄像机的投影矩阵
   camera.updateProjectionMatrix();
-  // 更新渲染器
+
+  //   更新渲染器
   renderer.setSize(window.innerWidth, window.innerHeight);
+  //   设置渲染器的像素比
+  renderer.setPixelRatio(window.devicePixelRatio);
 });
